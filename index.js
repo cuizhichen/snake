@@ -77,6 +77,7 @@ const render = () => {
   ctx.fillStyle = "rgb(70, 70, 70)";
   ctx.fillText(`Scores: ${scores}`, 16, 16);
   ctx.fillText(`Speed: ${speed}`, 110, 16);
+  ctx.fillText("v-0.0.1", 196, 16);
 };
 
 const updateFirstNode = () => {
@@ -96,7 +97,7 @@ const updateFirstNode = () => {
 
         snake.bodyNode.unshift([item[0] - SNAKE_WIDTH_2, item[1]]);
       }
-      item[0] -= snake.speed;
+      snake.bodyNode[0][0] -= snake.speed;
       break;
     case 38:
       if (isNewNode) {
@@ -107,7 +108,7 @@ const updateFirstNode = () => {
 
         snake.bodyNode.unshift([item[0], item[1] - SNAKE_WIDTH_2]);
       }
-      item[1] -= snake.speed;
+      snake.bodyNode[0][1] -= snake.speed;
       break;
     case 39:
       if (isNewNode) {
@@ -118,7 +119,7 @@ const updateFirstNode = () => {
 
         snake.bodyNode.unshift([item[0] + SNAKE_WIDTH_2, item[1]]);
       }
-      item[0] += snake.speed;
+      snake.bodyNode[0][0] += snake.speed;
       break;
     case 40:
       if (isNewNode) {
@@ -129,7 +130,7 @@ const updateFirstNode = () => {
 
         snake.bodyNode.unshift([item[0], item[1] + SNAKE_WIDTH_2]);
       }
-      item[1] += snake.speed;
+      snake.bodyNode[0][1] += snake.speed;
       break;
 
     default:
@@ -184,7 +185,8 @@ const checkLastNode = () => {
 };
 
 const updateLastNode = () => {
-  const last = snake.bodyNode[snake.bodyNode.length - 1];
+  const len = snake.bodyNode.length;
+  const last = snake.bodyNode[len - 1];
   switch (last[2]) {
     case 37:
       last[0] -= snake.speed;
@@ -194,7 +196,6 @@ const updateLastNode = () => {
       break;
     case 39:
       last[0] += snake.speed;
-
       break;
     case 40:
       last[1] += snake.speed;
