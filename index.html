@@ -8,20 +8,30 @@
     <style>
       body {
         margin: 0;
-        /* text-align: center; */
+      }
+      #app {
         position: relative;
         height: 100vh;
       }
 
-      canvas {
+      .main-canvas,
+      .continue-mask-canvas {
         position: absolute;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -54%);
       }
+      .pause-canvas {
+        position: absolute;
+        left: 50%;
+        top: 20px;
+        transform: translateX(580px);
+        cursor: pointer;
+      }
     </style>
   </head>
   <body>
+    <div id="app"></div>
     <script src="./index.js"></script>
   </body>
 </html>

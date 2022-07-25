@@ -1,8 +1,11 @@
+const app = document.querySelector("#app");
+
 const canvas = document.createElement("canvas");
+canvas.classList.add("main-canvas");
 const ctx = canvas.getContext("2d");
 canvas.width = 1200;
 canvas.height = 800;
-document.body.appendChild(canvas);
+app.appendChild(canvas);
 
 const BORDER_WIDTH = 6;
 const SNAKE_WIDTH = 12;
@@ -28,23 +31,27 @@ const keyMap = {
   right: 39,
   down: 40,
 };
+
+const keyCodeMap = Object.fromEntries(
+  Object.entries(keyMap).map((r) => r.reverse())
+);
 // 37 -> left
 // 38 -> up
 // 39 -> right
 // 40 -> down
-let prevKeysDown = keyMap.right;
 let keysDown = keyMap.right;
 let temporaryKeysDown = null;
+let animationFrame = null;
+let pause = false;
 
 window.addEventListener("keydown", ({ keyCode }) => {
   // 存在点击比时间间隔快的可能性
   temporaryKeysDown = keyCode;
-  prevKeysDown = keysDown;
 });
 
 const foodReset = () => {
   food.x = FOOD_WIDTH + Math.random() * (canvas.width - FOOD_WIDTH * 3);
-  food.y = FOOD_WIDTH + Math.random() * (canvas.height - FOOD_WIDTH * 3);
+  food.y = FOOD_WIDTH + Math.random() * (canvas.height - FOOD_WIDTH * 3) + 32;
 };
 
 const render = () => {
@@ -277,11 +284,12 @@ const init = () => {
     canvas.width - BORDER_WIDTH,
     canvas.height - BORDER_WIDTH
   );
-
   reset();
 };
 
 const walk = () => {
+  if (pause) return;
+
   if (
     (temporaryKeysDown === 37 && keysDown !== 39) ||
     (temporaryKeysDown === 38 && keysDown !== 40) ||
@@ -295,10 +303,86 @@ const walk = () => {
   render();
 
   setTimeout(() => {
-    requestAnimationFrame(walk);
+    animationFrame = requestAnimationFrame(walk);
   }, 102 - speed * 2);
 };
 
 init();
-render();
 walk();
+
+// 暂停逻辑
+const canvas2 = document.createElement("canvas");
+canvas2.classList.add("pause-canvas");
+app.appendChild(canvas2);
+const ctx2 = canvas2.getContext("2d");
+canvas2.width = 20;
+canvas2.height = 26;
+
+ctx2.lineWidth = 4;
+ctx2.strokeStyle = "rgb(70, 70, 70)";
+
+const renderPause = () => {
+  ctx2.fillStyle = "rgb(70, 70, 70)";
+  ctx2.fillRect(0, 0, 8, 26);
+  ctx2.fillRect(12, 0, 8, 26);
+};
+
+const renderContinue = () => {
+  ctx2.beginPath();
+  ctx2.moveTo(3, 4);
+  ctx2.lineTo(16, 13);
+  ctx2.lineTo(3, 22);
+  ctx2.closePath();
+  ctx2.stroke();
+};
+
+const canvas3 = document.createElement("canvas");
+canvas3.classList.add("continue-mask-canvas");
+const ctx3 = canvas3.getContext("2d");
+app.appendChild(canvas3);
+canvas3.width = 1200;
+canvas3.height = 800;
+
+const renderContinueMask = () => {
+  ctx3.fillStyle = "rgba(0, 0, 0, 0.2)";
+  ctx3.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx3.fillStyle = "rgba(0, 0, 0, 0.5)";
+  ctx3.lineWidth = 30;
+  ctx3.beginPath();
+  ctx3.moveTo(550, 300);
+  ctx3.lineTo(750, 400);
+  ctx3.lineTo(550, 500);
+  ctx3.closePath();
+  ctx3.fill();
+
+  ctx3.font = "16px Helvetica";
+  ctx3.fillText("已暂停，按空格可继续。", 560, 550);
+};
+
+const cleanContinueMask = () => {
+  ctx3.clearRect(0, 0, canvas.width, canvas.height);
+};
+
+renderPause();
+
+const handlePause = () => {
+  pause = !pause;
+  ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+  if (pause) {
+    renderContinue();
+    renderContinueMask();
+    cancelAnimationFrame(animationFrame);
+    ctx.fillText(keyCodeMap[keysDown], 256, 16);
+  } else {
+    renderPause();
+    cleanContinueMask();
+    requestAnimationFrame(walk);
+  }
+};
+
+window.addEventListener("keydown", (e) => {
+  if (e.keyCode === 32) handlePause();
+});
+
+canvas2.addEventListener("click", handlePause);
