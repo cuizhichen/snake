@@ -1,10 +1,15 @@
+// TODO
+// 1. 队列管理方向
+// 2. 吃身体失败
+// 3. 食物不出现在身体里
+
 const app = document.querySelector("#app");
 
 const canvas = document.createElement("canvas");
 canvas.classList.add("main-canvas");
 const ctx = canvas.getContext("2d");
 canvas.width = 1200;
-canvas.height = 800;
+canvas.height = 804;
 app.appendChild(canvas);
 
 const BORDER_WIDTH = 6;
@@ -43,6 +48,8 @@ let keysDown = keyMap.right;
 let temporaryKeysDown = null;
 let animationFrame = null;
 let pause = false;
+// TODO: 记录点击方向键
+const keydownQueue = [];
 
 window.addEventListener("keydown", ({ keyCode }) => {
   // 存在点击比时间间隔快的可能性
@@ -50,8 +57,22 @@ window.addEventListener("keydown", ({ keyCode }) => {
 });
 
 const foodReset = () => {
-  food.x = FOOD_WIDTH + Math.random() * (canvas.width - FOOD_WIDTH * 3);
-  food.y = FOOD_WIDTH + Math.random() * (canvas.height - FOOD_WIDTH * 3) + 32;
+  // food.x = FOOD_WIDTH + Math.random() * (canvas.width - FOOD_WIDTH * 3);
+  // food.y = FOOD_WIDTH + Math.random() * (canvas.height - FOOD_WIDTH * 3) + 32;
+  food.x =
+    BORDER_WIDTH +
+    Math.floor(
+      ((canvas.width - BORDER_WIDTH * 3) / SNAKE_WIDTH) * Math.random()
+    ) *
+      SNAKE_WIDTH +
+    FOOD_WIDTH / 2;
+  food.y =
+    BORDER_WIDTH +
+    Math.floor(
+      ((canvas.height - BORDER_WIDTH * 3) / SNAKE_WIDTH) * Math.random()
+    ) *
+      SNAKE_WIDTH +
+    FOOD_WIDTH / 2;
 };
 
 const render = () => {
@@ -215,10 +236,10 @@ const updateLastNode = () => {
 const handleEatFood = () => {
   const first = snake.bodyNode[0];
   if (
-    first[0] + SNAKE_WIDTH_2 + FOOD_WIDTH / 2 >= food.x &&
-    food.x + SNAKE_WIDTH_2 + FOOD_WIDTH / 2 >= first[0] &&
-    first[1] + SNAKE_WIDTH_2 + FOOD_WIDTH / 2 >= food.y &&
-    food.y + SNAKE_WIDTH_2 + FOOD_WIDTH / 2 >= first[1]
+    first[0] + FOOD_WIDTH / 2 >= food.x &&
+    food.x + FOOD_WIDTH / 2 >= first[0] &&
+    first[1] + FOOD_WIDTH / 2 >= food.y &&
+    food.y + FOOD_WIDTH / 2 >= first[1]
   ) {
     const last = snake.bodyNode[snake.bodyNode.length - 1];
     switch (last[2]) {
@@ -246,8 +267,8 @@ const handleEatFood = () => {
 
 const reset = () => {
   snake.bodyNode = [
-    [canvas.width / 2 + 24, canvas.height / 2],
-    [canvas.width / 2 - 24, canvas.height / 2, keyMap.right],
+    [canvas.width / 2 + 30, canvas.height / 2 - 6],
+    [canvas.width / 2 - 30, canvas.height / 2 - 6, keyMap.right],
   ];
   scores = 0;
   speed = 1;
