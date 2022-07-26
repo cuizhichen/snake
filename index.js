@@ -49,11 +49,14 @@ let temporaryKeysDown = null;
 let animationFrame = null;
 let pause = false;
 // TODO: 记录点击方向键
-const keydownQueue = [];
+let keydownQueue = [];
 
 window.addEventListener("keydown", ({ keyCode }) => {
   // 存在点击比时间间隔快的可能性
-  temporaryKeysDown = keyCode;
+  // temporaryKeysDown = keyCode;
+  if (keyCodeMap[keyCode]) {
+    keydownQueue.push(keyCode);
+  }
 });
 
 const foodReset = () => {
@@ -105,7 +108,7 @@ const render = () => {
   ctx.fillStyle = "rgb(70, 70, 70)";
   ctx.fillText(`Scores: ${scores}`, 16, 16);
   ctx.fillText(`Speed: ${speed}`, 110, 16);
-  ctx.fillText("v-0.0.1", 196, 16);
+  ctx.fillText("v-0.0.2", 196, 16);
 };
 
 const updateFirstNode = () => {
@@ -311,17 +314,27 @@ const init = () => {
 const walk = () => {
   if (pause) return;
 
-  if (
-    (temporaryKeysDown === 37 && keysDown !== 39) ||
-    (temporaryKeysDown === 38 && keysDown !== 40) ||
-    (temporaryKeysDown === 39 && keysDown !== 37) ||
-    (temporaryKeysDown === 40 && keysDown !== 38)
-  ) {
-    keysDown = temporaryKeysDown;
+  if (keydownQueue.length) {
+    if (keydownQueue.every((r) => r === keysDown)) {
+      keydownQueue.push(keysDown);
+    }
+    keydownQueue.forEach((key) => {
+      if (
+        (key === 37 && keysDown !== 39) ||
+        (key === 38 && keysDown !== 40) ||
+        (key === 39 && keysDown !== 37) ||
+        (key === 40 && keysDown !== 38)
+      ) {
+        keysDown = key;
+      }
+      update();
+      render();
+    });
+    keydownQueue = [];
+  } else {
+    update();
+    render();
   }
-
-  update();
-  render();
 
   setTimeout(() => {
     animationFrame = requestAnimationFrame(walk);
