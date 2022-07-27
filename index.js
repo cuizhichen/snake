@@ -1,7 +1,6 @@
 // TODO
-// 1. 队列管理方向
-// 2. 吃身体失败
-// 3. 食物不出现在身体里
+// 1. 吃身体失败
+// 2. 食物不出现在身体里
 
 const app = document.querySelector("#app");
 
@@ -45,15 +44,12 @@ const keyCodeMap = Object.fromEntries(
 // 39 -> right
 // 40 -> down
 let keysDown = keyMap.right;
-let temporaryKeysDown = null;
 let animationFrame = null;
 let pause = false;
 // TODO: 记录点击方向键
 let keydownQueue = [];
 
 window.addEventListener("keydown", ({ keyCode }) => {
-  // 存在点击比时间间隔快的可能性
-  // temporaryKeysDown = keyCode;
   if (keyCodeMap[keyCode]) {
     keydownQueue.push(keyCode);
   }
@@ -108,7 +104,7 @@ const render = () => {
   ctx.fillStyle = "rgb(70, 70, 70)";
   ctx.fillText(`Scores: ${scores}`, 16, 16);
   ctx.fillText(`Speed: ${speed}`, 110, 16);
-  ctx.fillText("v-0.0.2", 196, 16);
+  ctx.fillText("v-0.0.3", 196, 16);
 };
 
 const updateFirstNode = () => {
@@ -275,6 +271,8 @@ const reset = () => {
   ];
   scores = 0;
   speed = 1;
+  keydownQueue = [];
+  keysDown = keyMap.right;
   foodReset();
 };
 
@@ -291,12 +289,59 @@ const handleBoundary = () => {
   }
 };
 
+const findNodeInSnakeBody = (x, y) => {
+  let prev = null;
+
+  return snake.bodyNode.some((node) => {
+    if (!prev) {
+      switch (snake.bodyNode[1][2]) {
+        case keyMap.down:
+          y -= SNAKE_WIDTH_2;
+          prev = [node[0], node[1] - SNAKE_WIDTH];
+          break;
+        case keyMap.up:
+          y += SNAKE_WIDTH_2;
+          prev = [node[0], node[1] + SNAKE_WIDTH];
+          break;
+        case keyMap.left:
+          x += SNAKE_WIDTH_2;
+          prev = [node[0] + SNAKE_WIDTH, node[1]];
+          break;
+        case keyMap.right:
+          x -= SNAKE_WIDTH_2;
+          prev = [node[0] - SNAKE_WIDTH, node[1]];
+          break;
+        default:
+          break;
+      }
+
+      return;
+    }
+
+    if (node[0] === prev[0] && node[0] === x) {
+      return (y >= node[1] && y <= prev[1]) || (y <= node[1] && y >= prev[1]);
+    }
+    if (node[1] === prev[1] && node[1] === y) {
+      return (x >= node[0] && x <= prev[0]) || (x <= node[0] && x >= prev[0]);
+    }
+    prev = node;
+  });
+};
+
+const checkNodeInSnakeBody = () => {
+  if (findNodeInSnakeBody(snake.bodyNode[0][0], snake.bodyNode[0][1])) {
+    alert(`Game Over! Eat ${scores} food 🎉🎉🎉!`);
+    reset();
+  }
+};
+
 const update = () => {
   handleBoundary();
   updateFirstNode();
   updateLastNode();
   checkLastNode();
   handleEatFood();
+  checkNodeInSnakeBody();
 };
 
 const init = () => {
@@ -318,7 +363,10 @@ const walk = () => {
     if (keydownQueue.every((r) => r === keysDown)) {
       keydownQueue.push(keysDown);
     }
-    keydownQueue.forEach((key) => {
+
+    const walkKey = () => {
+      const key = keydownQueue.shift();
+      if (!key) return;
       if (
         (key === 37 && keysDown !== 39) ||
         (key === 38 && keysDown !== 40) ||
@@ -329,8 +377,26 @@ const walk = () => {
       }
       update();
       render();
-    });
-    keydownQueue = [];
+      requestAnimationFrame(walkKey);
+    };
+    walkKey();
+
+    // keydownQueue.forEach((key) => {
+    //   if (
+    //     (key === 37 && keysDown !== 39) ||
+    //     (key === 38 && keysDown !== 40) ||
+    //     (key === 39 && keysDown !== 37) ||
+    //     (key === 40 && keysDown !== 38)
+    //   ) {
+    //     keysDown = key;
+    //   }
+    //   if (keydownQueue.length >= 2) {
+    //     console.log(keydownQueue);
+    //   }
+    //   update();
+    //   render();
+    // });
+    // keydownQueue = [];
   } else {
     update();
     render();
